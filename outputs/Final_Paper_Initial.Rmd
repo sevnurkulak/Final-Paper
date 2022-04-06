@@ -10,8 +10,7 @@ abstract: ' Stress has been one of the main important health concerns over the y
   paper focuses on several stress factors in Canada, looking specifically at different
   age groups and locations to see if there are any common stress factors within these
   groups. 
-  \\par
-  \\textbf {Keywords:} mental health; stress; mental health factors; Canada; age; day-to-day life; work; financial stress; time pressure; schoolwork; health concerns; family problems'
+  keywords:mental health; stress; mental health factors; Canada; age; day-to-day life; work; financial stress; time pressure; schoolwork; health concerns; family problems'
 
 ---
 
