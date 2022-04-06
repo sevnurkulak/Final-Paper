@@ -1,12 +1,17 @@
 ---
 title: "Stress factors in Canada depending on the location in Canada and age"
-
-author: 
-  - Sevnur Kulak
-
+author: "Sevnur Kulak"
 date: "`r format(Sys.time(), '%d %B %Y')`"
-keywords: "mental health; stress; mental health factors; Canada; age; day-to-day life; work; financial stress; time pressure; schoolwork; health concerns; family problems"
-abstract: " Stress has been one of the main important health concerns over the years. It is important to identify specific stress factors in different age groups and in different locations so that any actions can be taken for its reduction. This paper focuses on several stress factors in Canada, looking specifically at different age groups and locations to see if there are any common stress factors within these groups. "
+output: pdf_document
+
+abstract: ' Stress has been one of the main important health concerns over the years.
+  It is important to identify specific stress factors in different age groups and
+  in different locations so that any actions can be taken for its reduction. This
+  paper focuses on several stress factors in Canada, looking specifically at different
+  age groups and locations to see if there are any common stress factors within these
+  groups. 
+  \\par
+  \\textbf {Keywords:} mental health; stress; mental health factors; Canada; age; day-to-day life; work; financial stress; time pressure; schoolwork; health concerns; family problems'
 
 ---
 
