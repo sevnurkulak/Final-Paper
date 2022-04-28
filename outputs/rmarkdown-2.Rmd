@@ -1,0 +1,705 @@
+---
+title: "Stress factors in Canada depending on the location in Canada and age"
+author: "Sevnur Kulak"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output:
+  pdf_document: default
+  bookdown::pdf_document2:
+    fig_caption: yes
+abstract: Stress has been one of the main important health concerns over the years.
+  It is important to identify specific stress factors in different sexes, different
+  age groups, and in different locations so that any actions can be taken for its
+  reduction. This paper focuses on several stress factors in Canada, looking specifically
+  at sex, different age groups, and locations to see if there are any common stress
+  factors within these groups. The paper will be helpful for the institutions which
+  try to reduce the stress level of Canadians since the paper finds differences in
+  underlying stress factors especially in different locations and age groups in Canada.
+keywords: mental health; stress; mental health factors; Canada; age; day-to-day life;
+  work; financial stress; time pressure; schoolwork; health concerns; family problems
+thanks: 'Code and data are available at: https://github.com/sevnurkulak/Final-Paper'
+bibliography: references.bib
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+# Loading packages
+library(tidyverse)
+library(tibble)
+library(janitor)
+library(dplyr)
+library(plyr)
+library(ggplot2)
+library(modelsummary)
+```
+
+```{r message=FALSE, cache=TRUE, warning = FALSE, echo = FALSE}
+set.seed(85993)
+workingDir <- "/Users/sevnur/Desktop/finalPaper/Final-Paper/inputs"
+setwd(workingDir)
+# Reading Data and cleaning summary statistics
+rawData <-read.csv("13100802.csv")
+
+rawData <- rawData[which(rawData$Characteristics == "Number of persons"),]
+rawData <- rawData[which(rawData$GEO != "Canada (excluding territories)"),]
+rawData <- rawData[which(rawData$Age.group != "Total, 12 years and over"),]
+rawData <- rawData[which(rawData$Sex != "Both sexes"),]
+interData <- rawData[,c('GEO','Age.group','Sex','Indicators','VALUE')]
+
+
+# Renaming variables
+interData$Indicators <- gsub("Main source of stress in day-to-day life, ", '',interData$Indicators)
+interData$Indicators <- gsub("none", 'Unknown',interData$Indicators)
+
+# Cleaning End
+```
+
+# Introduction
+Stress has been one of the biggest health concerns of human life although its consequences are still unforeseeable. According to the Canadian Mental Health Association, “When we don’t have a healthy way to deal with stress, it can harm us more than help” (@cmha). In fact, 63% of Canadians feel the same or more stress in their lives compared to 5 years ago (@stress). When that is the case, it becomes more crucial to identify specific stress factors that contribute to such outcome. 
+There are various triggering factors of stress depending on the country, location within a country, income, age, education, health, family, social life, work-life balance, loss and more. Depending on each factor, stress exposure and its impact on a person/group varies. For instance, according to the American Psychological Association, the younger generation reports more stress than the older generation (@american). Recent studies even believe that such exposure to stress by the younger generation caused detrimental outcomes to occur such as higher rates of anxiety, major depression, and suicides (@divecha_2020). In order to cope with stress better, it is important to assess different contributing factors of stress so that necessary actions, such as new policy implementation, can be taken specific to different groups depending on location, age, or sex. 
+This paper focuses on the main stress factors in Canada, utilizing a dataset from Open Data - Government of Canada (@open). The paper identifies the stress factors in three different categories depending on sex, age, and the states of Canada. The paper’s initial hypothesis is to see different levels of stress caused by different stress factors depending on the geographical location, sex, and different age groups. 
+In order to do the analysis I looked at the dataset dividing it into three categories mainly: state wise in Canada, different age groups in Canada, and females and males in Canada. Before doing the analysis, I first checked if these groups reported any exposure towards stress or not so that before analyzing each stress factor, I could see if there is any stress factor that has an impact on that person at all. After checking that a person feels stressed about a factor, I first focused on the the group of sex. The main purpose of this analysis is to see if there is any inequality between males and females, so that necessary actions can be taken to minimize this inequality. The analysis shows that there is no significant difference of having a stress factor in their lives or not between two sexes in Canada. After that, I focused on different age groups in five categories to see if there are some specific factors that are dominant depending on the age range. Whereas school work is the main underlying stress factor for the age range of 12-17, 18-34 age range is stressed mainly because of work and financial concerns.  Amount of stress exposure varies in different age groups, people in the 18-34 age range being the most stressful ones in Canada. Lastly, I looked at the state specific stress factors to see if there is any cluster. All the states in Canada have similar levels of stress, differing in the specific reasons of the stress. Alberta citizens are mostly stressed about work for instance, whereas Manitoba citizens’ main stress factor is financial concerns. As the detailed analysis will be discussed in the Data and Results section, the paper in summary finds differences in stress factors depending on the location and age groups among Canadians. That’s why it is important to assess the differences in stress factor for each specific group of either location, age, or sex; so that the analysis will help government, policy makers, shools, workspaces, and more related institutions to take necessary actions to reduce or help coping with the amount of stress of Canadians.
+The paper proceeds with the Data section in which I discuss the features of the variables and the data itself as well as the graphs and tables. The section of the Model will then explain how simulation proceeds and the model’s prediction on having mental illness or not state by state among the Canadian population. The paper will then proceed with the Results section in which the analysis of the data, graphs, and tables will be conducted. The Discussion section will summarize the paper itself, highlighting the key findings and will elaborate on the strength and weaknesses of the paper as well as potential further research topics. 
+
+
+# Data
+
+The data is taken from the Government of Canada’s Open Data portal. The dataset was first released in 2018 and named “Mental health characteristics: ability to handle stress and sources of stress” (@open government portal). The dataset was conducted in different states in Canada among various age groups and to both females and males. As my paper, the dataset also focuses on sex, different age levels, and different locations in Canada trying to figure out if the residents feel stressed, how are they coping with it, and what is the underlying reason of their stress. The poll was conducted in Alberta, British Columbia, Manitoba, New Brunswick, NewFoundland and Labrador, Nova Scotia, Ontario, Prince Edward Island, Quebec, and Saskatchewan. The residents are divided into 5 different age groups: 12-17 years, 18-34 years, 35-49 years, 50-64 years, 65 years and over. The poll was also conducted on both males and females. The response variables are divided and named under 9 categories: family, financial concerns, health, school work, time pressure, work, other, unknow, and no issue, no issue indicating that respondents do not feel stress. Therefore, this response is now taken into account when stress factor specific analysis is done. 
+Because my question of interest focuses on the specific stress factors in Canada depending on where the residents live, what age group they belong to, and what is their sex, having a concise and focused dataset helped to conduct a clear analysis with using all the independent variables of the dataset. The confusing part of this dataset was, it was already giving most of the summary statistics under the variables of “Canada,” “both sexes,” and “total age.” Since the dataset does not have a clear definition of variables or any related informatory write-ups related, it was hard to interpret the findings and the summary. That’s why, while cleaning the data, I only kept the response variables of different stress factors depending on specific location names, and excluded the summary statistics under the variable of “Canada.” Similarly, I also kept different age groups and different sexes, excluding the sum of “total age groups” and “both sexes” since the paper is not interested in the summary statistics that the dataset provides. I also excluded data related to independent variables such as the coordinates of a state in order to avoid confusion. So that left the dataset with the independent variables of location, sex, and age groups, and the response variables of different stress factor names. One of the disadvantages of the data was it is hard to conduct a quantitative analysis since they are mostly categorical rather than continuous variables. Therefore, I could only conduct comparative statistics using bar graphs. 
+As mentioned above, the dataset lacks necessary explanation of both independent variables and response variables. For instance, the paper has the response variable of “Ability to handle unexpected and difficult problems, good or excellent.” Besides not telling the meaning of such a response variable, the dataset does not even include the levels of handling stress as “good” or “excellent.” Therefore, the analysis assumes the response variable of “ability to handle unexpected and difficult problems, good or excellent” means that the respondents do not feel stress in their life. Therefore, they do not have specific stress factors in their lives that I took into account while analyzing specific stress factors depending on specific characteristics. However, because the paper also conducts an analysis of having a stress factor in life or not, I assumed there is no difference between the “good” level and an “excellent” level, summing these two responses up. So, I constructed a new variable of not having a stress factor as a result of this sum. In addition, there are ambiguous response variables that are open to interpretation. For instance, although some of the respondents indicate that they have a stress factor in their life, they did not specify what that specific factor is and only mentioned it as “other” or “none.” I assumed the “other” response is given for the factors that are not listed in the government’s poll and treated it as “other” in the data table and graphs. Similarly, I assumed the factor “none” causes the respondents some level of stress, however, the respondents do not know the underlying reason for it. That’s why I named it as the “unknown” factor in my analysis in graphs and data tables. As the last assumption, because it is not stated otherwise, I assumed that each respondent only responds once and has a chance to pick if they have any stress factor in their life, and if yes, what factor is it, not allowing them to respond to more than one variable. It is important to highlight that this is one of the greatest weaknesses of the dataset. If the assumptions are not correct, it will have a good amount of impact on the analysis of the paper. 
+Additionally, whereas the number of males and females do not vary as respondents, the number of responses vary in different age groups and in the states. Therefore, the analysis might under or overestimate each stress factor among the age groups in different states. In order to mitigate this problem, I normalized each data and looked at the percentages of stress levels within each sub-group so that the distribution of the stress factors will be a true representation of respondents’ stress and the distribution of stress among each age group and location reflect the true distribution on population of Canada overall. The sex variable is not normalized since the respondent numbers are already the same. 
+
+
+
+Figures 1, 2, 3, 4, 5, and 6 show the response variables of either having a stress exposure or not, if so the specific stress factors depending on either the age or the location of respondents. Figure 1 compares males and females depending on how much stress each sex is feeling. Figures 2 and 3 focus on the independent variable of different age groups. There are 5 groups that the paper focuses on: age range between 12-17, 18-34, 35-49, 50-64, and 65+. Figure 2 shows how much stress exposure each sub-group has and how they distribute among different response variables of stress factors. Figure 3 shows the normalized percentages of each age-groups’ total stress factors. By conducting the analysis in Figure 3, the paper shows any potential cluster or inequality in level of stress. Similar to Figure 2, Figure 4 shows percentages of stress exposure however now focusing on states of Canada: whether the respondent in a specific location experiences stress in their life, if so, what is the specific stress factor causing this response. The states that the responses are taken from are Alberta, British Columbia, Manitoba, New Brunswick, NewFoundland and Labrador, Nova Scotia, Ontario, Prince Edward Island, Quebec, and Saskatchewan. Figure 5 shows the stress factor percentages of different states of Canada in non-normalized format. Figure 6 shows the normalized percentages of stress experience specific to each state in Canada.  When the responses are normalized, it is clear that the previous figure (Figure 5) is falsifying the true underlying percentages since the number of respondents are different and underestimates the total stress percentage of states with lower number of respondents. Therefore, normalizing the percentages are necessary. 
+
+
+```{r Figure 1, warning = FALSE,echo=FALSE}
+maleIdx <- which(interData$Sex == "Males")
+
+maleTable <- interData[maleIdx,]
+
+femaleIdx <- which(interData$Sex == "Females")
+
+femaleTable <- interData[femaleIdx,]
+
+
+nonmentalHealth <- sum(interData$VALUE[which(interData$Indicators == "Ability to handle the day-to-day demands in life, good or excellent")]) + sum(interData$VALUE[which(interData$Indicators == "Ability to handle unexpected and difficult problems, good or excellent")])
+ 
+total <- sum(interData$VALUE, na.rm = TRUE)
+
+mentalHealth <- total - nonmentalHealth
+
+
+
+nonmentalHealthMale <- sum(maleTable$VALUE[which(maleTable$Indicators == "Ability to handle the day-to-day demands in life, good or excellent")]) + sum(maleTable$VALUE[which(maleTable$Indicators == "Ability to handle unexpected and difficult problems, good or excellent")])
+
+totalMale <- sum(maleTable$VALUE, na.rm = TRUE)
+
+mentalHealthMale <- totalMale - nonmentalHealthMale
+
+
+nonmentalHealthFemale <- sum(femaleTable$VALUE[which(femaleTable$Indicators == "Ability to handle the day-to-day demands in life, good or excellent")]) + sum(femaleTable$VALUE[which(femaleTable$Indicators == "Ability to handle unexpected and difficult problems, good or excellent")])
+
+totalFemale <- sum(femaleTable$VALUE, na.rm = TRUE)
+
+mentalHealthFemale <- totalFemale - nonmentalHealthFemale
+
+
+tb1 <- matrix(c(mentalHealthMale / totalMale,  nonmentalHealthMale / totalMale, mentalHealthFemale / totalFemale,  nonmentalHealthFemale / totalFemale),ncol=2,byrow=TRUE)
+colnames(tb1) <- c("Mental Health","No Mental Health")
+rownames(tb1) <- c("Male","Female")
+tb1 <- as.table(tb1)
+tb1
+```
+
+```{r Figure 2, warning = FALSE,echo=FALSE}
+# Creating Table 2 ===================================
+# Number of Respondents for each subgroups by age and response
+
+Table12_17 <- interData[which(interData$Age.group == "12 to 17 years"),]
+
+Table18_34 <- interData[which(interData$Age.group == "18 to 34 years"),]
+
+Table35_49 <- interData[which(interData$Age.group == "35 to 49 years"),]
+
+Table50_64 <- interData[which(interData$Age.group == "50 to 64 years"),]
+
+Table65_ <- interData[which(interData$Age.group == "65 years and over"),]
+
+Table12_17_agg <-  with(Table12_17, tapply(VALUE, Indicators, sum, na.rm=TRUE))
+Table18_34_agg <- with(Table18_34, tapply(VALUE, Indicators, sum, na.rm=TRUE))
+Table35_49_agg <- with(Table35_49, tapply(VALUE, Indicators, sum, na.rm=TRUE))
+Table50_64_agg <- with(Table50_64, tapply(VALUE, Indicators, sum, na.rm=TRUE))
+Table65_agg <- with(Table65_, tapply(VALUE, Indicators, sum, na.rm=TRUE))
+
+
+tb2 <- matrix(c(c(Table12_17_agg[c("family","financial concerns", "health", "school work (12 to 34 years old)","time pressures/ not enough time", "work", "other", "Unknown")], (Table12_17_agg[("Ability to handle the day-to-day demands in life, good or excellent")] + Table12_17_agg[("Ability to handle unexpected and difficult problems, good or excellent")]))
+,
+c(Table18_34_agg[c("family","financial concerns", "health", "school work (12 to 34 years old)","time pressures/ not enough time", "work", "other", "Unknown")], (Table18_34_agg[("Ability to handle the day-to-day demands in life, good or excellent")] + Table18_34_agg[("Ability to handle unexpected and difficult problems, good or excellent")]))
+,
+c(Table35_49_agg[c("family","financial concerns", "health", "school work (12 to 34 years old)","time pressures/ not enough time", "work", "other", "Unknown")], (Table35_49_agg[("Ability to handle the day-to-day demands in life, good or excellent")] + Table35_49_agg[("Ability to handle unexpected and difficult problems, good or excellent")]))
+,
+c(Table50_64_agg[c("family","financial concerns", "health", "school work (12 to 34 years old)","time pressures/ not enough time", "work", "other", "Unknown")], (Table50_64_agg[("Ability to handle the day-to-day demands in life, good or excellent")] + Table50_64_agg[("Ability to handle unexpected and difficult problems, good or excellent")]))
+,
+c(Table65_agg[c("family","financial concerns", "health", "school work (12 to 34 years old)","time pressures/ not enough time", "work", "other", "Unknown")], (Table65_agg[("Ability to handle the day-to-day demands in life, good or excellent")] + Table65_agg[("Ability to handle unexpected and difficult problems, good or excellent")]))
+), ncol=9, byrow=TRUE)
+
+colnames(tb2) <- c("family","financial concerns", "health", "school work (12 to 34 years old)","time pressures/ not enough time", "work", "other", "Unknown", "No Issue")
+rownames(tb2) <- c("12-17","18-34","35-49","50-64","65+")
+tb2 <- as.table(tb2)
+
+# Creating Table 3 =========================================================
+# Percentages of Respondents in population for each subgroups by age and response
+
+row1 <- c(Table12_17_agg[c("family","financial concerns", "health", "school work (12 to 34 years old)","time pressures/ not enough time", "work", "other", "Unknown")], (Table12_17_agg[("Ability to handle the day-to-day demands in life, good or excellent")] + Table12_17_agg[("Ability to handle unexpected and difficult problems, good or excellent")])) * 100 / sum(Table12_17$VALUE, na.rm = TRUE)
+row2 <- c(Table18_34_agg[c("family","financial concerns", "health", "school work (12 to 34 years old)","time pressures/ not enough time", "work", "other", "Unknown")], (Table18_34_agg[("Ability to handle the day-to-day demands in life, good or excellent")] + Table18_34_agg[("Ability to handle unexpected and difficult problems, good or excellent")])) * 100 / sum(Table18_34$VALUE, na.rm = TRUE)
+row3 <- c(Table35_49_agg[c("family","financial concerns", "health", "school work (12 to 34 years old)","time pressures/ not enough time", "work", "other", "Unknown")], (Table35_49_agg[("Ability to handle the day-to-day demands in life, good or excellent")] + Table35_49_agg[("Ability to handle unexpected and difficult problems, good or excellent")])) * 100 / sum(Table35_49$VALUE, na.rm = TRUE)
+row4 <- c(Table50_64_agg[c("family","financial concerns", "health", "school work (12 to 34 years old)","time pressures/ not enough time", "work", "other", "Unknown")], (Table50_64_agg[("Ability to handle the day-to-day demands in life, good or excellent")] + Table50_64_agg[("Ability to handle unexpected and difficult problems, good or excellent")])) * 100 / sum(Table50_64$VALUE, na.rm = TRUE)
+row5 <- c(Table65_agg[c("family","financial concerns", "health", "school work (12 to 34 years old)","time pressures/ not enough time", "work", "other", "Unknown")], (Table65_agg[("Ability to handle the day-to-day demands in life, good or excellent")] + Table65_agg[("Ability to handle unexpected and difficult problems, good or excellent")])) * 100 / sum(Table65_$VALUE, na.rm = TRUE)
+
+tb3 <- matrix(c(row1,row2,row3,row4,row5), ncol=9, byrow=TRUE)
+
+colnames(tb3) <- c("family","financial concerns", "health", "school work (12 to 34 years old)","time pressures/ not enough time", "work", "other", "Unknown", "No Issue")
+rownames(tb3) <- c("12-17","18-34","35-49","50-64","65+")
+tb3 <- as.table(tb3)
+tb3
+
+```
+```{r Figure 3, warning = FALSE,echo=FALSE}
+# Creating Table 4 ===========================================================
+# Percentages of mental issues by age group
+
+mentallyIssues <- interData[which(interData$Indicators != "Ability to handle the day-to-day demands in life, good or excellent" & interData$Indicators != "Ability to handle unexpected and difficult problems, good or excellent"), ]
+
+
+tb4 <- with(mentallyIssues, tapply(VALUE, Age.group, sum, na.rm=TRUE)) * 100 / sum(with(mentallyIssues, tapply(VALUE, Age.group, sum, na.rm=TRUE)), na.rm = TRUE)
+
+tb4
+```
+
+
+```{r Figure 4, warning = FALSE,echo=FALSE}
+# Creating Table 5 ===========================================================
+# Number of respondents by province
+
+al <- interData[which(interData$GEO == "Alberta"),]
+
+bc <- interData[which(interData$GEO == "British Columbia"),]
+
+mn <- interData[which(interData$GEO == "Manitoba"),]
+
+nb <- interData[which(interData$GEO == "New Brunswick"),]
+
+nf <- interData[which(interData$GEO == "Newfoundland and Labrador"),]
+
+ns <- interData[which(interData$GEO == "Nova Scotia"),]
+
+on <- interData[which(interData$GEO == "Ontario"),]
+
+pei <- interData[which(interData$GEO == "Prince Edward Island"),]
+
+qc <- interData[which(interData$GEO == "Quebec"),]
+
+sk <- interData[which(interData$GEO == "Saskatchewan"),]
+
+
+al_agg <-  with(al, tapply(VALUE, Indicators, sum, na.rm=TRUE))
+
+bc_agg <-  with(bc, tapply(VALUE, Indicators, sum, na.rm=TRUE))
+
+mn_agg <-  with(mn, tapply(VALUE, Indicators, sum, na.rm=TRUE))
+
+nb_agg <-  with(nb, tapply(VALUE, Indicators, sum, na.rm=TRUE))
+
+nf_agg <-  with(nf, tapply(VALUE, Indicators, sum, na.rm=TRUE))
+
+ns_agg <-  with(ns, tapply(VALUE, Indicators, sum, na.rm=TRUE))
+
+on_agg <-  with(on, tapply(VALUE, Indicators, sum, na.rm=TRUE))
+
+qc_agg <-  with(qc, tapply(VALUE, Indicators, sum, na.rm=TRUE))
+
+sk_agg <-  with(sk, tapply(VALUE, Indicators, sum, na.rm=TRUE))
+
+pei_agg <-  with(pei, tapply(VALUE, Indicators, sum, na.rm=TRUE))
+
+row1 <- c(al_agg[c("family","financial concerns", "health", "school work (12 to 34 years old)","time pressures/ not enough time", "work", "other", "Unknown")], (al_agg[("Ability to handle the day-to-day demands in life, good or excellent")] + al_agg[("Ability to handle unexpected and difficult problems, good or excellent")]))
+row2 <- c(bc_agg[c("family","financial concerns", "health", "school work (12 to 34 years old)","time pressures/ not enough time", "work", "other", "Unknown")], (bc_agg[("Ability to handle the day-to-day demands in life, good or excellent")] + bc_agg[("Ability to handle unexpected and difficult problems, good or excellent")]))
+row3 <- c(mn_agg[c("family","financial concerns", "health", "school work (12 to 34 years old)","time pressures/ not enough time", "work", "other", "Unknown")], (mn_agg[("Ability to handle the day-to-day demands in life, good or excellent")] + mn_agg[("Ability to handle unexpected and difficult problems, good or excellent")]))
+row4 <- c(nb_agg[c("family","financial concerns", "health", "school work (12 to 34 years old)","time pressures/ not enough time", "work", "other", "Unknown")], (nb_agg[("Ability to handle the day-to-day demands in life, good or excellent")] + nb_agg[("Ability to handle unexpected and difficult problems, good or excellent")]))
+row5 <- c(nf_agg[c("family","financial concerns", "health", "school work (12 to 34 years old)","time pressures/ not enough time", "work", "other", "Unknown")], (nf_agg[("Ability to handle the day-to-day demands in life, good or excellent")] + nf_agg[("Ability to handle unexpected and difficult problems, good or excellent")]))
+row6 <- c(ns_agg[c("family","financial concerns", "health", "school work (12 to 34 years old)","time pressures/ not enough time", "work", "other", "Unknown")], (ns_agg[("Ability to handle the day-to-day demands in life, good or excellent")] + ns_agg[("Ability to handle unexpected and difficult problems, good or excellent")]))
+row7 <- c(on_agg[c("family","financial concerns", "health", "school work (12 to 34 years old)","time pressures/ not enough time", "work", "other", "Unknown")], (on_agg[("Ability to handle the day-to-day demands in life, good or excellent")] + on_agg[("Ability to handle unexpected and difficult problems, good or excellent")]))
+row8 <- c(qc_agg[c("family","financial concerns", "health", "school work (12 to 34 years old)","time pressures/ not enough time", "work", "other", "Unknown")], (qc_agg[("Ability to handle the day-to-day demands in life, good or excellent")] + qc_agg[("Ability to handle unexpected and difficult problems, good or excellent")]))
+row9 <- c(sk_agg[c("family","financial concerns", "health", "school work (12 to 34 years old)","time pressures/ not enough time", "work", "other", "Unknown")], (sk_agg[("Ability to handle the day-to-day demands in life, good or excellent")] + sk_agg[("Ability to handle unexpected and difficult problems, good or excellent")]))
+row10 <- c(pei_agg[c("family","financial concerns", "health", "school work (12 to 34 years old)","time pressures/ not enough time", "work", "other", "Unknown")], (pei_agg[("Ability to handle the day-to-day demands in life, good or excellent")] + pei_agg[("Ability to handle unexpected and difficult problems, good or excellent")]))
+
+
+tb5 <- matrix(c(row1,row2,row3,row4,row5,row6,row7,row8,row9,row10), ncol=9, byrow=TRUE)
+
+colnames(tb5) <- c("family","financial concerns", "health", "school work (12 to 34 years old)","time pressures/ not enough time", "work", "other", "Unknown", "No Issue")
+rownames(tb5) <- c("AL","BC", "MN", "NB", "NF", "NS", "ON", "QC", "SK", "PEI")
+tb5 <- as.table(tb5)
+
+
+
+# Creating Table 6 =================================================================
+# Percentages of respondents by indicator and province
+
+row1 <- c(al_agg[c("family","financial concerns", "health", "school work (12 to 34 years old)","time pressures/ not enough time", "work", "other", "Unknown")], (al_agg[("Ability to handle the day-to-day demands in life, good or excellent")] + al_agg[("Ability to handle unexpected and difficult problems, good or excellent")])) * 100 / sum(al$VALUE, na.rm = TRUE)
+row2 <- c(bc_agg[c("family","financial concerns", "health", "school work (12 to 34 years old)","time pressures/ not enough time", "work", "other", "Unknown")], (bc_agg[("Ability to handle the day-to-day demands in life, good or excellent")] + bc_agg[("Ability to handle unexpected and difficult problems, good or excellent")])) * 100 / sum(bc$VALUE, na.rm = TRUE)
+row3 <- c(mn_agg[c("family","financial concerns", "health", "school work (12 to 34 years old)","time pressures/ not enough time", "work", "other", "Unknown")], (mn_agg[("Ability to handle the day-to-day demands in life, good or excellent")] + mn_agg[("Ability to handle unexpected and difficult problems, good or excellent")])) * 100 / sum(mn$VALUE, na.rm = TRUE)
+row4 <- c(nb_agg[c("family","financial concerns", "health", "school work (12 to 34 years old)","time pressures/ not enough time", "work", "other", "Unknown")], (nb_agg[("Ability to handle the day-to-day demands in life, good or excellent")] + nb_agg[("Ability to handle unexpected and difficult problems, good or excellent")])) * 100 / sum(nb$VALUE, na.rm = TRUE)
+row5 <- c(nf_agg[c("family","financial concerns", "health", "school work (12 to 34 years old)","time pressures/ not enough time", "work", "other", "Unknown")], (nf_agg[("Ability to handle the day-to-day demands in life, good or excellent")] + nf_agg[("Ability to handle unexpected and difficult problems, good or excellent")])) * 100 / sum(nf$VALUE, na.rm = TRUE)
+row6 <- c(ns_agg[c("family","financial concerns", "health", "school work (12 to 34 years old)","time pressures/ not enough time", "work", "other", "Unknown")], (ns_agg[("Ability to handle the day-to-day demands in life, good or excellent")] + ns_agg[("Ability to handle unexpected and difficult problems, good or excellent")])) * 100 / sum(ns$VALUE, na.rm = TRUE)
+row7 <- c(on_agg[c("family","financial concerns", "health", "school work (12 to 34 years old)","time pressures/ not enough time", "work", "other", "Unknown")], (on_agg[("Ability to handle the day-to-day demands in life, good or excellent")] + on_agg[("Ability to handle unexpected and difficult problems, good or excellent")])) * 100 / sum(on$VALUE, na.rm = TRUE)
+row8 <- c(qc_agg[c("family","financial concerns", "health", "school work (12 to 34 years old)","time pressures/ not enough time", "work", "other", "Unknown")], (qc_agg[("Ability to handle the day-to-day demands in life, good or excellent")] + qc_agg[("Ability to handle unexpected and difficult problems, good or excellent")])) * 100 / sum(qc$VALUE, na.rm = TRUE)
+row9 <- c(sk_agg[c("family","financial concerns", "health", "school work (12 to 34 years old)","time pressures/ not enough time", "work", "other", "Unknown")], (sk_agg[("Ability to handle the day-to-day demands in life, good or excellent")] + sk_agg[("Ability to handle unexpected and difficult problems, good or excellent")])) * 100 / sum(sk$VALUE, na.rm = TRUE)
+row10 <- c(pei_agg[c("family","financial concerns", "health", "school work (12 to 34 years old)","time pressures/ not enough time", "work", "other", "Unknown")], (pei_agg[("Ability to handle the day-to-day demands in life, good or excellent")] + pei_agg[("Ability to handle unexpected and difficult problems, good or excellent")])) * 100 / sum(pei$VALUE, na.rm = TRUE)
+
+
+tb6 <- matrix(c(row1,row2,row3,row4,row5,row6,row7,row8,row9,row10), ncol=9, byrow=TRUE)
+
+colnames(tb6) <- c("family","financial concerns", "health", "school work (12 to 34 years old)","time pressures/ not enough time", "work", "other", "Unknown", "No Issue")
+rownames(tb6) <- c("AL","BC", "MN", "NB", "NF", "NS", "ON", "QC", "SK", "PEI")
+tb6 <- as.table(tb6)
+tb6
+
+```
+
+
+
+```{r Figure 5, warning = FALSE,echo=FALSE}
+# Percentage of mental problems by province
+tb7 <- with(mentallyIssues, tapply(VALUE, GEO, sum, na.rm=TRUE)) * 100 / sum(with(mentallyIssues, tapply(VALUE, GEO, sum, na.rm=TRUE)), na.rm = TRUE)
+tb7
+```
+
+```{r Figure 6, warning = FALSE,echo=FALSE}
+# For each province percentage of population with mental problem
+tb8 <- with(mentallyIssues, tapply(VALUE, GEO, sum, na.rm=TRUE))/with(interData, tapply(VALUE, GEO, sum, na.rm=TRUE)) 
+
+
+tb8
+```
+Figures 7, 8, 9, 10, 11,12, 13, 14, 15, and 16 are representations of different stress factor distributions among the two sexes in bar charts. Whereas y-axis shows the number of responses, X-axis has the stress factor names in alphabetical order: family, financial concerns, health, other, school work, time pressure, unknown, and work from left to right. Pink portion of each column belongs to female respondents, whereas the blue portion is male respondents’. Each distribution belongs to 10 different states of Alberta, British Columbia, Manitoba, New Brunswick, Newfoundland and Labrador, Nova Scotia, Ontario, Prince Edward Island, Quebec, and Saskatchewan respectively. 
+
+
+```{r warning = FALSE,echo=FALSE}
+# Creating Graph 1 ==========================================================
+
+# Bar plots for number of people experience mental issues for each province by indicators and gender
+p <- with(al[which(al$Sex == "Males"),], tapply(VALUE, Indicators, sum, na.rm=TRUE))
+
+p2 <- with(al[which(al$Sex == "Females"),], tapply(VALUE, Indicators, sum, na.rm=TRUE))
+
+
+ggplot(al[which(substr(al$Indicators, 1,4) != 'Abil'),], aes(x = Indicators, y = VALUE, fill = Sex, label = VALUE)) +
+  geom_bar(aes(fill = Sex),stat = "identity" )  +
+  ggtitle("Number of People Experiencing Mental Issues in Alberta by Indicators and Gender") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+ggplot(bc[which(substr(bc$Indicators, 1,4) != 'Abil'),], aes(x = Indicators, y = VALUE, fill = Sex, label = VALUE)) +
+  geom_bar(aes(fill = Sex),stat = "identity")  +
+  ggtitle("Number of People Experiencing Mental Issues in British Columbia by Indicators and Gender") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+
+ggplot(mn[which(substr(mn$Indicators, 1,4) != 'Abil'),], aes(x = Indicators, y = VALUE, fill = Sex, label = VALUE)) +
+  geom_bar(aes(fill = Sex),stat = "identity")  +
+  ggtitle("Number of People Experiencing Mental Issues in Manitoba by Indicators and Gender") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+ggplot(nb[which(substr(nb$Indicators, 1,4) != 'Abil'),], aes(x = Indicators, y = VALUE, fill = Sex, label = VALUE)) +
+  geom_bar(aes(fill = Sex),stat = "identity")  +
+  ggtitle("Number of People Experiencing Mental Issues in New Bruinswick by Indicators and Gender") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+ggplot(nf[which(substr(nf$Indicators, 1,4) != 'Abil'),], aes(x = Indicators, y = VALUE, fill = Sex, label = VALUE)) +
+  geom_bar(aes(fill = Sex),stat = "identity")  +
+  ggtitle("Number of People Experiencing Mental Issues in New Foundland & Labrador by Indicators and Gender") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+ggplot(ns[which(substr(ns$Indicators, 1,4) != 'Abil'),], aes(x = Indicators, y = VALUE, fill = Sex, label = VALUE)) +
+  geom_bar(aes(fill = Sex),stat = "identity")  +
+  ggtitle("Number of People Experiencing Mental Issues in Nova Scotia by Indicators and Gender") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+ggplot(on[which(substr(on$Indicators, 1,4) != 'Abil'),], aes(x = Indicators, y = VALUE, fill = Sex, label = VALUE)) +
+  geom_bar(aes(fill = Sex),stat = "identity")  +
+  ggtitle("Number of People Experiencing Mental Issues in Ontario by Indicators and Gender") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+ggplot(pei[which(substr(pei$Indicators, 1,4) != 'Abil'),], aes(x = Indicators, y = VALUE, fill = Sex, label = VALUE)) +
+  geom_bar(aes(fill = Sex),stat = "identity")  +
+  ggtitle("Number of People Experiencing Mental Issues in Prince Edward Island by Indicators and Gender") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+ggplot(qc[which(substr(qc$Indicators, 1,4) != 'Abil'),], aes(x = Indicators, y = VALUE, fill = Sex, label = VALUE)) +
+  geom_bar(aes(fill = Sex),stat = "identity")  +
+  ggtitle("Number of People Experiencing Mental Issues in Quebec by Indicators and Gender") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+ggplot(sk[which(substr(sk$Indicators, 1,4) != 'Abil'),], aes(x = Indicators, y = VALUE, fill = Sex, label = VALUE)) +
+  geom_bar(aes(fill = Sex),stat = "identity")  +
+  ggtitle("Number of People Experiencing Mental Issues in Saskatchewan by Indicators and Gender") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+
+
+```
+
+
+Similar to sex, location, and stress factor bar charts above, Figures 17, 18, 19, 20, 21, 22, 23, 24, 25, and 26 show the distribution of each stress factors’ among different age groups in different states of Canada. Y-axis shows the number of responses recorded and x-axis shows the stress factor names, same as above. The age group 12-17 is indicated by the color of pink, 18-34 with yellow, 35-49 with green, 50-64 with blue, and 65+ with light pink. Each distribution is specific to a state in the order of Alberta, British Columbia, Manitoba, New Brunswick, Newfoundland and Labrador, Nova Scotia, Ontario, Prince Edward Island, Quebec, and Saskatchewan. 
+```{r warning = FALSE,echo=FALSE}
+# Creating Table 2 ==========================================
+
+# Bar plots for number of people experience mental issues for each province by indicators and age group
+ggplot(al[which(substr(al$Indicators, 1,4) != 'Abil'),], aes(x = Indicators, y = VALUE, fill = Age.group, label = VALUE)) +
+  geom_bar(aes(fill = Age.group),stat = "identity") +
+  ggtitle("Number of People Experiencing Mental Issues in Alberta by Indicators and Age") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+ggplot(bc[which(substr(bc$Indicators, 1,4) != 'Abil'),], aes(x = Indicators, y = VALUE, fill = Age.group, label = VALUE)) +
+  geom_bar(aes(fill = Age.group),stat = "identity") +
+  ggtitle("Number of People Experiencing Mental Issues in British Columbia by Indicators and Age") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+ggplot(mn[which(substr(mn$Indicators, 1,4) != 'Abil'),], aes(x = Indicators, y = VALUE, fill = Age.group, label = VALUE)) +
+  geom_bar(aes(fill = Age.group),stat = "identity") +
+  ggtitle("Number of People Experiencing Mental Issues in Manitoba by Indicators and Age") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+ggplot(nb[which(substr(nb$Indicators, 1,4) != 'Abil'),], aes(x = Indicators, y = VALUE, fill = Age.group, label = VALUE)) +
+  geom_bar(aes(fill = Age.group),stat = "identity") +
+  ggtitle("Number of People Experiencing Mental Issues in New Brunswick by Indicators and Age") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+ggplot(nf[which(substr(nf$Indicators, 1,4) != 'Abil'),], aes(x = Indicators, y = VALUE, fill = Age.group, label = VALUE)) +
+  geom_bar(aes(fill = Age.group),stat = "identity") +
+  ggtitle("Number of People Experiencing Mental Issues in New Foundland & Labrador by Indicators and Age") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+ggplot(ns[which(substr(ns$Indicators, 1,4) != 'Abil'),], aes(x = Indicators, y = VALUE, fill = Age.group, label = VALUE)) +
+  geom_bar(aes(fill = Age.group),stat = "identity") +
+  ggtitle("Number of People Experiencing Mental Issues in Nova Scotia by Indicators and Age") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+ggplot(on[which(substr(on$Indicators, 1,4) != 'Abil'),], aes(x = Indicators, y = VALUE, fill = Age.group, label = VALUE)) +
+  geom_bar(aes(fill = Age.group),stat = "identity") +
+  ggtitle("Number of People Experiencing Mental Issues in Ontario by Indicators and Age") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+ggplot(pei[which(substr(pei$Indicators, 1,4) != 'Abil'),], aes(x = Indicators, y = VALUE, fill = Age.group, label = VALUE)) +
+  geom_bar(aes(fill = Age.group),stat = "identity") +
+  ggtitle("Number of People Experiencing Mental Issues in Prince Edward Island by Indicators and Age") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+ggplot(qc[which(substr(qc$Indicators, 1,4) != 'Abil'),], aes(x = Indicators, y = VALUE, fill = Age.group, label = VALUE)) +
+  geom_bar(aes(fill = Age.group),stat = "identity") +
+  ggtitle("Number of People Experiencing Mental Issues in Quebec by Indicators and Age") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+ggplot(sk[which(substr(sk$Indicators, 1,4) != 'Abil'),], aes(x = Indicators, y = VALUE, fill = Age.group, label = VALUE)) +
+  geom_bar(aes(fill = Age.group),stat = "identity") +
+  ggtitle("Number of People Experiencing Mental Issues in Saskatchewan by Indicators and Age") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+
+```
+
+Figure 27 shows the distribution of each stress factor among different states only. The x-axis has the state names, whereas the y-axis has the number of recorded responses. As it will be discussed more in the Results section, Figure 27 misrepresents the data and the analysis due to different numbers of responses in different states. Therefore, Figure 28 is constructed to avoid such falsified representation. In Figure 28, the data is normalized. X-axis has the names of states, whereas the y-axis shows percentages of each response variable that are shown in the legend. 
+
+```{r Figure 27-28 , warning = FALSE,echo=FALSE}
+# Creating Table 3 ===============================================
+
+ggplot(mentallyIssues, aes(x = GEO, y = VALUE, fill = Indicators, label = VALUE)) +
+  geom_bar(aes(fill = Indicators),stat = "identity")  +
+  ggtitle("Number of People Experiencing Mental Issues by Province and Indicators") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+# Creating Table 4 ================================================
+
+# For each indicator percentages by province
+row1 <- c(al_agg[c("family","financial concerns", "health", "school work (12 to 34 years old)","time pressures/ not enough time", "work", "other", "Unknown")]) * 100 / (sum(al$VALUE, na.rm = TRUE) - (al_agg[("Ability to handle the day-to-day demands in life, good or excellent")] + al_agg[("Ability to handle unexpected and difficult problems, good or excellent")]))
+row2 <- c(bc_agg[c("family","financial concerns", "health", "school work (12 to 34 years old)","time pressures/ not enough time", "work", "other", "Unknown")]) * 100 / (sum(bc$VALUE, na.rm = TRUE) - (bc_agg[("Ability to handle the day-to-day demands in life, good or excellent")] + bc_agg[("Ability to handle unexpected and difficult problems, good or excellent")]))
+row3 <- c(mn_agg[c("family","financial concerns", "health", "school work (12 to 34 years old)","time pressures/ not enough time", "work", "other", "Unknown")]) * 100 / (sum(mn$VALUE, na.rm = TRUE) - (mn_agg[("Ability to handle the day-to-day demands in life, good or excellent")] + mn_agg[("Ability to handle unexpected and difficult problems, good or excellent")]))
+row4 <- c(nb_agg[c("family","financial concerns", "health", "school work (12 to 34 years old)","time pressures/ not enough time", "work", "other", "Unknown")]) * 100 / (sum(nb$VALUE, na.rm = TRUE) - (nb_agg[("Ability to handle the day-to-day demands in life, good or excellent")] + nb_agg[("Ability to handle unexpected and difficult problems, good or excellent")]))
+row5 <- c(nf_agg[c("family","financial concerns", "health", "school work (12 to 34 years old)","time pressures/ not enough time", "work", "other", "Unknown")]) * 100 / (sum(nf$VALUE, na.rm = TRUE) - (nf_agg[("Ability to handle the day-to-day demands in life, good or excellent")] + nf_agg[("Ability to handle unexpected and difficult problems, good or excellent")]))
+row6 <- c(ns_agg[c("family","financial concerns", "health", "school work (12 to 34 years old)","time pressures/ not enough time", "work", "other", "Unknown")]) * 100 / (sum(ns$VALUE, na.rm = TRUE) - (ns_agg[("Ability to handle the day-to-day demands in life, good or excellent")] + ns_agg[("Ability to handle unexpected and difficult problems, good or excellent")]))
+row7 <- c(on_agg[c("family","financial concerns", "health", "school work (12 to 34 years old)","time pressures/ not enough time", "work", "other", "Unknown")]) * 100 / (sum(on$VALUE, na.rm = TRUE) - (on_agg[("Ability to handle the day-to-day demands in life, good or excellent")] + on_agg[("Ability to handle unexpected and difficult problems, good or excellent")]))
+row8 <- c(qc_agg[c("family","financial concerns", "health", "school work (12 to 34 years old)","time pressures/ not enough time", "work", "other", "Unknown")]) * 100 / (sum(qc$VALUE, na.rm = TRUE) - (qc_agg[("Ability to handle the day-to-day demands in life, good or excellent")] + qc_agg[("Ability to handle unexpected and difficult problems, good or excellent")]))
+row9 <- c(sk_agg[c("family","financial concerns", "health", "school work (12 to 34 years old)","time pressures/ not enough time", "work", "other", "Unknown")]) * 100 / (sum(sk$VALUE, na.rm = TRUE) - (sk_agg[("Ability to handle the day-to-day demands in life, good or excellent")] + sk_agg[("Ability to handle unexpected and difficult problems, good or excellent")]))
+row10 <- c(pei_agg[c("family","financial concerns", "health", "school work (12 to 34 years old)","time pressures/ not enough time", "work", "other", "Unknown")]) * 100 / (sum(pei$VALUE, na.rm = TRUE) - (pei_agg[("Ability to handle the day-to-day demands in life, good or excellent")] + pei_agg[("Ability to handle unexpected and difficult problems, good or excellent")]))
+
+
+tb13 <- matrix(c(row1,row2,row3,row4,row5,row6,row7,row8,row9,row10), ncol=8, byrow=TRUE)
+
+colnames(tb13) <- c("family","financial concerns", "health", "school work (12 to 34 years old)","time pressures/ not enough time", "work", "other", "Unknown")
+rownames(tb13) <- c("AL","BC", "MN", "NB", "NF", "NS", "ON", "QC", "SK", "PEI")
+tb13 <- as.table(tb13)
+tb13
+GEO      <- c(rep(c("AL","BC", "MN", "NB", "NF", "NS", "ON", "QC", "SK", "PEI"), each = 8))
+Indicators  <- c(rep(c("family","financial concerns", "health", "school work (12 to 34 years old)","time pressures/ not enough time", "work", "other", "Unknown"), times = 10))
+Percentage <- c(row1,row2,row3,row4,row5,row6,row7,row8,row9,row10)
+tb13_df      <- data.frame(GEO, Indicators, Percentage)
+
+ggplot(tb13_df, aes(x = GEO, y = Percentage, fill = Indicators, label = Percentage)) +
+  geom_bar(aes(fill = Indicators),stat = "identity")  +
+  ggtitle("Percentage of Indicators in People Experiencing Mental Issues by Province")
+
+```
+
+# Model 
+In order to simulate a stress factors survey in Canada, we constructed a simulation where the population has the following attributes. Males or females for Sex, 10 provinces of Canada for GEO, and 5 age groups of 12-17, 18-24, 35-49, 50-64, and 65+. So each data entry is grouped and is a part of \10x5x2 = 100 groups. For the simplicity of the model, we set the indicator variable as binary. Instead of different stress factors among the residents, we set whether mental problems exist or not. Finally we wanted to create a bias within our simulated dataset. So by getting rid of 300 males out of 2000 simulated data points, we oversampled females. Survey data was generated to make older and males less likely to experience mental problems and overall 30% of the population experiences mental problems. 
+
+
+Our model is P(m_j | (m_j, n_j)) = exp(B0 + B1(Sex_j) + B2(Age.group_j) + B3(GEO_j)) / 
+(1 + exp(B0 + B1(Sex_j) + B2(Age.group_j) + B3(GEO_j))) + e_j 
+Model predicts the probability of existence of mental problem by considering the Sex, age group and province of the individual.
+
+```{r Model, warning = FALSE,echo = FALSE}
+
+# Creating population using simulation
+size_of_sample_for_canadian_mh_survey <- 2000
+
+sample_for_can_mh_survey <-
+  tibble(Age.group = 
+           sample(x = c(0:4), 
+                  size = size_of_sample_for_canadian_mh_survey,
+                  replace = TRUE
+           ),
+         Sex = 
+           sample(x = c(0:1),
+                  size = size_of_sample_for_canadian_mh_survey,
+                  replace = TRUE
+           ),
+         GEO = 
+           sample(x = c(1:10),
+                  size = size_of_sample_for_canadian_mh_survey,
+                  replace = TRUE
+           ),
+         noise = rnorm(size_of_sample_for_canadian_mh_survey, mean = 0, sd = 1), 
+         Indicators = 1 + 0.5 * Age.group + 0.5 * Sex + 0.01 * GEO + noise
+  ) 
+
+
+# Setting variables 
+sample_for_can_mh_survey <- 
+  sample_for_can_mh_survey |> 
+  mutate(Indicators = 
+           if_else(Indicators > 3, 
+                   'mental problem exist', 
+                   'good or excellent')
+  )
+
+
+sample_for_can_mh_survey <- 
+  sample_for_can_mh_survey |> 
+  mutate(
+    Age.group = case_when(
+      Age.group == 0 ~ '12 to 17 years',
+      Age.group == 1 ~ '18 to 34 years',
+      Age.group == 2 ~ '35 to 49 years',
+      Age.group == 3 ~ '50 to 64 years',
+      Age.group == 4 ~ '65 years and over',
+      TRUE ~ 'Problem'
+    ),
+    Sex = case_when(
+      Sex == 0 ~ 'Males',
+      Sex == 1 ~ 'Females',
+      TRUE ~ 'Problem'
+    ),
+    GEO = case_when(
+      GEO == 1 ~ 'Alberta',
+      GEO == 2 ~ 'British Columbia',
+      GEO == 3 ~ 'Manitoba',
+      GEO == 4 ~ 'New Brunswick',
+      GEO == 5 ~ 'Newfoundland and Labrador',
+      GEO == 6 ~ 'Nova Scotia',
+      GEO == 7 ~ 'Ontario',
+      GEO == 8 ~ 'Prince Edward Island',
+      GEO == 9 ~ 'Quebec',
+      GEO == 10 ~ 'Saskatchewan',
+      TRUE ~ 'Problem'
+    ),
+    
+  ) |> 
+  select(-noise)
+
+# Make classes as factor so we can fit a model.
+sample_for_can_mh_survey <- 
+  sample_for_can_mh_survey |> 
+  mutate(across(c(Age.group, Sex, GEO, Indicators), as_factor))
+
+
+sample_for_can_mh_survey |>   
+  head()
+
+# Summary of simualted data
+#sample_for_can_mh_survey |> 
+#  datasummary_skim(type = "categorical")
+
+# Removing 300 males so we can have a bias in our dataset
+sample_for_can_mh_survey <- 
+  sample_for_can_mh_survey |> 
+  arrange(Sex) |> 
+  slice(1:1700)
+
+# Summary of biased dataset with oversampled females
+sample_for_can_mh_survey |> 
+  datasummary_skim(type = "categorical")
+
+# Fitting model
+
+#model <- 
+  glm(Indicators ~ Sex + Age.group + GEO, 
+     data = sample_for_can_mh_survey,
+      family = "binomial"
+  )
+
+# Logistic regression model summary
+model |> 
+  modelsummary(fmt = 2, exponentiate = TRUE)
+
+```
+
+In the post stratification process we read the real survey data, and forecasted for each gender and age group from each provinces we constructed estimates of the likelihood of the existence of mental problem and then by adding these likelihoods within subgroups we estimated the percentage of mental illnesses’ contribution to the total mental illness in Canada.
+
+```{r Post Strata, warning = FALSE,echo = FALSE}
+# Post strata Real Data===================================
+set.seed(85993)
+workingDir <- "/Users/sevnur/Desktop/finalPaper/Final-Paper/inputs"
+setwd(workingDir)
+# Read real data
+rawData <-read.csv("13100802.csv")
+
+# Removing summary statstics in dataset
+rawData <- rawData[which(rawData$Characteristics == "Number of persons"),]
+rawData <- rawData[which(rawData$GEO != "Canada (excluding territories)"),]
+rawData <- rawData[which(rawData$Age.group != "Total, 12 years and over"),]
+rawData <- rawData[which(rawData$Sex != "Both sexes"),]
+
+# Renaming variables
+interData <- rawData[,c('GEO','Age.group','Sex','Indicators','VALUE')]
+interData$Indicators <- gsub("Main source of stress in day-to-day life, ", '',interData$Indicators)
+interData$Indicators <- gsub("Ability to handle the day-to-day demands in life, ", '',interData$Indicators)
+interData$Indicators <- gsub("Ability to handle unexpected and difficult problems, ", '',interData$Indicators)
+interData$Indicators <- gsub("none", 'Unknown',interData$Indicators)
+# Converting indicators of the real dataset to binary indicator so we can predict using logistic regression model.
+interData <- 
+  interData |> 
+  mutate(Indicators = 
+           if_else(Indicators == "good or excellent", 
+                   'good or excellent',
+                   'mental problem exist', 
+                   )
+  )
+# Make variables as factor so we can fit a model
+interData <- 
+interData |> 
+mutate(across(c(Age.group, Sex, GEO, Indicators), as_factor))
+
+
+#Preparing dataset and aggregating responders by subgroups
+interDataAgg <- 
+ interData %>% 
+    group_by(GEO, Age.group, Sex, Indicators) %>% 
+  summarise(VALUE = sum(VALUE, na.rm = TRUE))
+
+interDataAgg$VALUE <- interDataAgg$VALUE * 100 / sum(interDataAgg$VALUE)
+
+# Post Stratification 
+
+# Predict percentages using logistic regression model.
+post_strat_interData <- 
+  model |> 
+  predict(newdata = interDataAgg, type = 'response', se.fit = TRUE) |> 
+  as_tibble() |> 
+  cbind(interDataAgg)
+
+
+predictedResults <- post_strat_interData |> 
+  mutate(VALUE = fit*VALUE) |> 
+  group_by(GEO) |> 
+  summarise(results = sum(VALUE))
+
+actualResults <- interDataAgg |> 
+  group_by(GEO) |> 
+  summarise(results = sum(VALUE))
+
+predictedResults
+
+actualResults
+```
+Actual
+   GEO                       results
+   <fct>                       <dbl>
+ 1 Newfoundland and Labrador   1.40 
+ 2 Prince Edward Island        0.398
+ 3 Nova Scotia                 2.57 
+ 4 New Brunswick               2.01 
+ 5 Quebec                     23.8  
+ 6 Ontario                    38.8  
+ 7 Manitoba                    3.34 
+ 8 Saskatchewan                2.90 
+ 9 Alberta                    11.6  
+10 British Columbia           13.2  
+
+Estimated
+
+   GEO                       results
+   <fct>                       <dbl>
+ 1 Newfoundland and Labrador   0.940
+ 2 Prince Edward Island        0.268
+ 3 Nova Scotia                 1.76 
+ 4 New Brunswick               1.31 
+ 5 Quebec                     16.4  
+ 6 Ontario                    25.4  
+ 7 Manitoba                    2.15 
+ 8 Saskatchewan                1.81 
+ 9 Alberta                     8.69 
+10 British Columbia            9.14 
+
+
+# Results
+The programming language R [@citeR] was used to load data from the Canadian Government’s Open Data portal [@open government portal]. Through R’s libraries, the graphical analysis and modeling are conducted. The libraries tidyverse [@citetidyverse], tibble [@citetibble], janitor [@citejanitor], dpylr [@citedplyr], plyr [@citeplyr], and ggplot2 [@citeggplot2] are used to clean data and create analysis on both data tables and bar charts. For the simulation and modeling part of the paper, libraries tidyverse [@citetidyverse] and modelsummary [@citemodelsummary] are used. 
+
+	Looking at the figures in the Data section, Figure 1 (CROSS REFERENCE THEM ALL) compares two sexes whether they have any stress factors in their life or not. 35.7% of Canadian males reported that they have some sort of stress factor in their lives, whereas 64.3% of the males are in good mental health conditions. Female statistics are not very different from males. 36.6% of the Canadian females have some stress factor in their lives, whereas 63.4% of the females do no. Such comparison helps conducting an analysis on potential inequality between females and males. If stress exposure statistics were different than my finding, then necessary actions might have been taken depending on the type of the stress factor. For instance, if females were exposed to more stress in schools compared to males, then specific counseling might be appropriate. However, the findings suggest that the amount of stress that the both sexes are exposed to are very close to each other. 
+	Figure 2 shows the distribution of each stress factor among different age groups. Because the number of respondents are different in each group, these summary statistics are normalized, therefore avoiding any potential underestimation of any stress factor in an age group. Age group 2.4% of the stress factor for the age group 12-17 is caused by family, whereas 24.72% from school work, 3.93% from not having enough time, 0.68% from work, 0.22% from other, 3.47% from unknown, and 64.57% of them responded as not having a stress factor in their life. Age group of 18-34 stress factors accumulated as follows: 3.65% family problems, 9.18% financial concerns, 1.13% health, 5.13% school, 4.8% from not having enough time, 10.75% work, 0.93% from other, 1.73% because of the unknown reasons and 62.7% of the age group reported not having a stress factor in their lives. While 64.2% of the age group of 35-49 does not experience stress in their life, the stress exposure for that group is caused by 5.88% from family, 8.35% from financial concerns, 1.60% from health, 5.28% from not having enough time, 11.83% from work, 0.822% from other, and 2.07% from unknown reasons. Similar to the previous group, 64.2% of the age range of 50-64 recorded good mental health, whereas 7.37% of the stress factors is caused by family problems, 6.74% is because of the financial problems, 3.24% from health, 2.81% from having not enough time, 10.5% from work, 0.99% from other, 4.13% from unknown problems. Lastly, 64.2% of 65+ age group also has a good mental state, whereas 9.65% of the stress is caused by family issues, 4.5% is caused by financial concerns, 6.5% is because of health 1.77% not having enough time, 1.66% is because of work , and 10.23% is unknown. The stress factor distribution among the Canada population is as follows: 6.57% age range of 12-17, 26.8% age range of 18-34, 23.3% age range of 35-49, 24.7% age range of 50-64, 18.59% age range of 65 years and over as shown in Figure 3. 
+	When looking at the summary statistics above, the results are as expected. It was expected that the younger age range (12-17, 18-34) to have more stress factors related to school. Similarly, adults (18-34, 35-49, 50-64)  are more concerned about financial problems and work, not surprisingly. As the age range increases, health becomes more of an issue, again as expected. 
+	Figure 4 shows state specific stress factors. Alberta residents’ stress factors are caused by the reasons are as follow: 5.76% family problems, 7.71% financial concerns, 2.24% health, 3.12% school work, 4.51% from time pressure, 9.19% work, 0.79% other, 3.02% unknown; 63.7% of the residents report having no stress factor in their lives. Similarly, 63.4% of British Columbians do not report any stress factor exposure. 6.92% of the rest is caused by family, 7.53% by financial concerns, 2.69% health, 2.76% school work, 3.99% having not enough time, 8.09% from work, 1.12% from other factors, and 3.53% from unknown factors. Manitoba resident stress factors are caused by 6.49% family, 8.25% financial concerns, 2.29% from health, 2.88% from school work, 3.27% from time pressure, 7.70% from work, 0.32% from other factors 4.08% from unknown reasons; and 64.7%o f the residents report that they are not exposed to stress. New Brunswick resident factors are as follow: 6.03% from family, 7.38% from financial concerns, 2.69% from health problems, 2.08% from school work, 2.36% from not having enough time, 7.56% from work, 0.17% from other factors, 6.2% from unknown factors; 65.55% of the residents do not report any stress factor exposure. Whereas 66.5% of Newfoundland and Labrador residents feel no stress in their lives, 5.33% of the stress is caused by family, 6.88% from financial concerns, 3.1% from health, 2.2% from school work, 3.01% from time pressure, 6.87% from work, 0.12% from other factors, and 5.95% is because of the unknown factors. Nova Scotia residents’ stress is 6.23% caused by family issues, 7.89% by financial concerns, 2.26% because of health, 2.81% because of school work, 3.32% caused by time pressure, 7.90% because of work, 0.37% because of other reasons, and 4.29% due to unknown reasons. 64.93% of the Nova Scotia residents do not report stress in their lives. Whereas 63.43% of Ontario resident do not have stress, 6.06%of the stress is caused by family, whereas 7.05% is because of financial concerns, 2.56% is because of health issues, 3.04% is due to school work, 3.62% is because of not having enough time, 8.41% is because of work, 1.22% is caused by other factors, and 4.61% of the stress factors are unknown. Quebec residents’ stress factor distribution is as follow: 5.95% family, 5.39% due to financial concerns, 3.20% health, 3.15% school work, 3.92% not having enough time, 9.19% is because of work, 1.1% is caused by other factors, and 4.09% of the factors are unknown. 64.0% of the Quebec residents do not report stress factors in their lives. Stress factors in Saskatchewan is distributed as: 7.03% family, 7.75% financial concerns, 1.89% health, 3.02% school work, 3.92% time pressure, 8.02% because of work, 0.24% is due to other factors, and 2.44% of the stress factors are unknown. 65.67% of the residents in Saskatchewan do not report any stress factor in their lives. Lastly, 68.3% of the Prince Edward Island are not exposed to stress. 6.06% of the stress within the region is caused by family problems, 7.26% from financial concerns, 2.09% because of health, 2.32% because of school work, 1.62% due to having not enough time 7.63% caused by work, 0.14% is from other factors, and 4.56% is unknown. 
+	When looking at the data, surprisingly, there is no accumulation of a specific stress factor at a specific location. If it was the case, specific implications might be applied accordingly. For instance, if health concerns were higher at a state, then improvement of the healthcare system within that area will be required and appropriate. Similarly, if stress related to school were higher within a region, then a change of curriculum might have occurred. However, since that is not the case and each of the stress factor distributions among different states are fairly even, none of the states of Canada need a specific treatment with respect to these specific stress factors. 
+	Figure 5 is a non-normalized summary statistic distribution of stress factors among the states of Canada. As can seen from the table, due to the variance of respondents in each state, the percentage of stress exposure for each state varies. For instance, because the number of respondents are the least in Prince Edward islands, the stress exposure is seen as 0.34%. However, that is not the case, in order to have a more reliable summary, I normalized the number of responses within each sub-group, similar to the age-group normalization. Therefore, this eliminates a potential underestimation of stress factor values in places/age groups with less repondants and overestimation of stress factor values in places/age groups with more number of respondents. Figure 6 shows the normalized percentages of stress factor exposures in different states of Canada. 
+	Figures 7-28 are the visual representations of the data tables that are already discussed above. Figures 7-16 focus on distribution of stress factors among males and females in each state. Starting from Figure 7, each bar chart represents a state, stress factors lying on the x-axis. In Alberta, stress factors are distributed fairly equally among men and women. However, for the factors of financial concerns and work, males are exposed to more stress compared to females. However, females are exposed to more stress in family problems compared to males. Similar to Alberta, male residents of British Columbia are more exposed to stress factors related to work, and financial concerns than females, whereas females are more stressed about family issues compared to males. Additionally, in BC, females are more stressed on the health issues than that of males. In Manitoba, males are again more stressed because of work and financial concerns. On top of that, males are also more stressed in school than that of females. Females are stressed due to family issues and not having enough time more than males in MA. Similar to previous analysis, females in New Brunswick are stressed more because of family, health, and time pressure than that of males, whereas males are stressed because of financial concerns, school work and work than that of females. In Newfoundland and Labrador, males are stressed more because of financial concerns, health and work, whereas females’s stress factors accumulate in time pressure, school work, and family. In Nova Scotia, besides males having more stress because of work and females being more stressed because of family, all other factor distributions are fairly equal among the sexes. Not surprisingly females are more stressed because of the family issues in Ontario as well along with health and time pressure, whereas Ontario males’ main stress factors are work and financial concerns. In Prince Edward Island, females are mainly stressed because of family issues again, as well as time pressure and school work. Main stress factors for males in the region are work and financial concerns. In Quebec, besides males’ greater stress exposure to work and females’ greater stress exposure to family issues, all other stress factor distributions are fairly equally distributed. Lastly and not surprisingly, in Saskatchewan, females have greater stress exposure in family issues. Additionally, females are more stressed because of health related factors than that of males. Males are mostly stressed because of work and financial concerns. 
+	Although some of the stress factors vary from a sex to another sex depending on the location, the trend is females having more stress factors related to family problems in all states, whereas the same case applies to males in the stress factors of financial concerns and work. 
+	Figures 17-26 conduct a similar analysis to analyses done in Figures 7-16. Instead of using sex, bar charts now have different age ranges. Again, each plot represents a state and investigates specific stress factors among different age groups. 
+	As mentioned in the analysis of data tables, school work is a stress factor more on younger age groups of 12-17 and 18-34 years; work and financial concerns are greater stress factors for adult groups of 18-34, 35-49, and 50-64 in Alberta. Besides, health becomes more of a stress factor for the age group of 65+ compared to the other ones. The same analysis applies for British Columbia and Manitoba. In Manitoba, time pressure stress factor is frequent among young adults of 18-34 and 35-49 age ranges. Very similar analyses are also applied to the rest of the other states of Canada: Saskatchewan, Quebec, Prince Edward Island, Ontario , Nova Scotia, Newfoundland and Labrador, and New Brunswick. In addition to these very similar patterns, accumulation of family related stress is not seen in the very young age group of 12-17 in each state. So, it would be appropriate to comment that each age range’s stress factor distribution is very similar to each other in the overall population of Canada and does not really vary from state to state. 
+	Figure 27 is just a representation of how falsifying it could be if I do not normalize the data within each sub-group of different states. Because the respondents in Ontario are significantly greater than the other, it seems like Ontarians have more stress factors. However, that is not the case. In Figure 28, the issue is fixed. As previously discussed, distribution of stress factors depending on the location is shown in the figure. 
+
+
+#  Discussion 
+
+This paper investigates potential stress factors depending on sex, age, and location in Canada. The underlying purpose of the paper is to explore any potential accumulations of specific factors either specific to a sex, specific to an age group, or specific to a state. If found anything, the analysis can later be used for the identification and necessary regulations to decrease any potential inequality of or uneven distribution of stress, or simply to reduce stress overall among Canadians. As mentioned in the Introduction section, it is necessary to capture underlying stress factors specific to a group to prevent serious outcomes of stress exposure. 
+	Stress exposure is fairly equal between females and males as well as among different states. That is, equal numbers of females and males, residents of different states experience some level of stress and are caused by some specific stress factor. However, stress exposure differs from age group to another. The age groups that are most exposed to stress are 18-34, 35-49, and 50-64. The age group that is least exposed to stress is 12-17 years. 
+	Although the overall number of stress exposure are similar, stress factors vary especially depending on sex and age groups. In most of the states, females are stressed mostly because of family issues more than males. Besides, the main stress factor that causes males stress are financial concerns and work, more than that of females. 
+	Another significant finding of the paper is that younger age groups are mostly stressed because of school work, 12-17 and 18-34. Similarly, young adults and adults are mostly stressed about financial concerns and work. Additionally, as age increases, stress about health issues also increases. One of the findings of the paper is that the age group of 65+ is mostly stressed because of health issues. When looking at statewise and the distribution of stress factors in each state, it is quite even. Although each stress factor percentage is not exactly the same in each state, they are very similar, reflecting the overall Canadian population distribution fairly even among each state. 
+	To conduct our simulation and model, I picked a binary model for simplicity to predict whether a person has a mental illness or not. In the dataset it was indicated by either reporting a stress factor, which means that respondent has a mental illness, or not reporting a stress factor, which indicates that the respondent does not have a mental illness. Creating bias purposefully, the model’s prediction is very close to previous findings. As the previous data indicates, 35-36% of the population has mental illness, whereas our model suggests that it will be around 30%. 
+	One of the biggest weaknesses of the paper is it makes so many assumptions regarding the dataset since the dataset lacks necessary explanation. For instance, all the analysis done assumes each respondent was restricted to give only one stress factor if they indicated that they are exposed to stress. Also the difference between the stress factors of “none” and “other” are not clearly identified and might require additional research. As another potential research study, additional factors besides the existing ones might be investigated so that “none” and “other” factors are disclosed and become open for additional stress factor analyses. 
+	Besides all these, other limitations might have occurred during conducting the research. The way of conducting the poll might have affected respondents’ answers, leading to false answers. For instance, if the research was not conducted individually, a woman with a family stress factor might have responded as not having a stress factor or picking another stress factor rather than “family.” This would lead to false data collection and false data analysis. 
+	Additionally, although different states and different sexes independent variables are greatly categorized, another age range might change the analyses of the paper. For instance, the age range of 18-34 experiences very different factors: university application, university graduation, job search, marriage, and so forth. Putting such a wide range as one of the age ranges might not truly reflect the stress factors specific to that group. 
+	For further studies, researchers can investigate more on diagnosed/undiagnosed mental illnesses in Canada. By comparing the analysis done in this paper, they could find a potential relation of stress factors and different types of illnesses. That could also help to get a summary statistics on specific mental illnesses among both sexes, age groups, and states of Canada. 
+	Besides that, this research was done on the overall population of Canada, to people with different backgrounds. It would also be helpful to conduct similar analysis on people with similar backgrounds of education, income, and socio-economic status. That way we could see varying stress factors among each sub-group, ensuring that different levels of income, education, and socio-economic status would not have an impact on the outcome. 
+
+
+
+\newpage
+
+# Appendix
+
+
+\newpage
+
+# References
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
